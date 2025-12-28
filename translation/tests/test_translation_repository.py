@@ -14,7 +14,7 @@ from translation.repository.translation_repository import (
 )
 from translation.dto.translation_dto import TranslationSetDTO
 from translation.enum.translation_enum import SupportedLanguage, TranslationStatus
-from translation.exceptions. translation_exceptions import (
+from translation.exceptions.translation_exceptions import (
     TranslationNotFoundError,
     TranslationAlreadyExistsError,
     TranslationLoadError,
@@ -38,7 +38,7 @@ class TestInMemoryTranslationRepository:
         assert dto.language == SupportedLanguage.DE
         assert dto.text == "Speichern"
         assert dto.feature == "core"
-        assert dto. status == TranslationStatus. COMPLETE
+        assert dto.status == TranslationStatus.COMPLETE
 
     def test_get_translation_missing(self, populated_repository):
         """Test retrieving non-existent translation returns None."""
@@ -64,7 +64,7 @@ class TestInMemoryTranslationRepository:
 
     def test_get_translation_set_existing(self, populated_repository):
         """Test retrieving existing translation set."""
-        set_dto = populated_repository.get_translation_set("core. save", "core")
+        set_dto = populated_repository.get_translation_set("core.save", "core")
 
         assert set_dto is not None
         assert set_dto.label == "core.save"
@@ -153,7 +153,7 @@ class TestInMemoryTranslationRepository:
 
     def test_delete_translation_set_success(self, populated_repository):
         """Test deleting translation set."""
-        populated_repository. delete_translation_set("core. save", "core")
+        populated_repository.delete_translation_set("core.save", "core")
 
         assert populated_repository.get_translation_set("core.save", "core") is None
 
@@ -175,13 +175,13 @@ class TestInMemoryTranslationRepository:
 
         assert count == 3
 
-        dto = translation_repository.get_translation("test. key1", SupportedLanguage.DE, "test")
+        dto = translation_repository.get_translation("test.key1", SupportedLanguage.DE, "test")
         assert dto.text == "Wert 1"
 
     def test_load_feature_tsv_file_not_found_raises_error(self, translation_repository):
         """Test loading from non-existent file raises error."""
-        with pytest. raises(TranslationLoadError, match="TSV file not found"):
-            translation_repository.load_feature_tsv("test", "/nonexistent/path. tsv")
+        with pytest.raises(TranslationLoadError, match="TSV file not found"):
+            translation_repository.load_feature_tsv("test", "/nonexistent/path.tsv")
 
     def test_load_feature_tsv_invalid_header_raises_error(self, translation_repository, tmp_path):
         """Test loading TSV with invalid header raises error."""
@@ -205,11 +205,11 @@ class TestInMemoryTranslationRepository:
 
         populated_repository.persist_feature_tsv("core", str(output_path))
 
-        assert output_path. exists()
+        assert output_path.exists()
 
         # Verify content
         content = output_path.read_text(encoding="utf-8")
-        assert "core. save\tSpeichern\tSave" in content
+        assert "core.save\tSpeichern\tSave" in content
 
     def test_persist_feature_tsv_empty_feature(self, translation_repository, tmp_path):
         """Test persisting empty feature does nothing (no error)."""
@@ -223,7 +223,7 @@ class TestInMemoryTranslationRepository:
     def test_persist_feature_tsv_atomic_write(self, populated_repository, tmp_path):
         """Test that persist uses atomic write (tmp file + rename)."""
         output_path = tmp_path / "output.tsv"
-        tmp_file_path = output_path.with_suffix(". tmp")
+        tmp_file_path = output_path.with_suffix(".tmp")
 
         populated_repository.persist_feature_tsv("core", str(output_path))
 
@@ -254,7 +254,7 @@ class TestInMemoryTranslationRepository:
         coverage = translation_repository.get_coverage("nonexistent")
 
         assert coverage[SupportedLanguage.DE] == 0.0
-        assert coverage[SupportedLanguage. EN] == 0.0
+        assert coverage[SupportedLanguage.EN] == 0.0
 
 
 class TestTSVTranslationRepository:
@@ -273,7 +273,7 @@ class TestTSVTranslationRepository:
 
         # Setup:  Load TSV
         tsv_path = tmp_path / "labels.tsv"
-        tsv_path.write_text("label\tde\ten\ntest. key\tAlt\tOld\n", encoding="utf-8")
+        tsv_path.write_text("label\tde\ten\ntest.key\tAlt\tOld\n", encoding="utf-8")
         repo.load_feature_tsv("test", str(tsv_path))
 
         # Update

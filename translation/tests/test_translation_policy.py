@@ -18,7 +18,7 @@ class TestTranslationPolicy:
     def test_can_view_translations_authenticated_user(self, translation_policy, regular_user):
         """Test that any authenticated user can view translations."""
         assert translation_policy.can_view_translations(regular_user) is True
-        assert translation_policy.can_view_translations(regular_user. id) is True
+        assert translation_policy.can_view_translations(regular_user.id) is True
 
     def test_can_view_translations_unauthenticated(self, translation_policy):
         """Test that non-existent user cannot view."""
@@ -85,12 +85,12 @@ class TestTranslationPolicy:
 
     def test_enforce_delete_success(self, translation_policy, admin_user):
         """Test enforce_delete does not raise for ADMIN."""
-        translation_policy. enforce_delete(admin_user)  # Should not raise
+        translation_policy.enforce_delete(admin_user)  # Should not raise
 
     def test_enforce_delete_raises_error_for_qmb(self, translation_policy, qmb_user):
         """Test enforce_delete raises error for QMB (ADMIN only)."""
         with pytest.raises(TranslationPermissionError, match="lacks permission to delete"):
-            translation_policy. enforce_delete(qmb_user)
+            translation_policy.enforce_delete(qmb_user)
 
     def test_policy_without_user_service_with_dto(self):
         """Test policy can work without UserService if UserDTO provided."""

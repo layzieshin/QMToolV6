@@ -117,7 +117,7 @@ class TestTranslationDTO:
             language=SupportedLanguage.DE,
             text="Text",
             feature="core",
-            status=TranslationStatus. COMPLETE
+            status=TranslationStatus.COMPLETE
         )
 
         assert dto.is_missing() is False
@@ -129,7 +129,7 @@ class TestTranslationDTO:
             language=SupportedLanguage.DE,
             text="Text",
             feature="core",
-            status=TranslationStatus. DEPRECATED
+            status=TranslationStatus.DEPRECATED
         )
 
         assert dto.is_deprecated() is True
@@ -289,7 +289,7 @@ class TestCreateTranslationDTO:
     def test_valid_creation(self):
         """Test creating valid CreateTranslationDTO."""
         dto = CreateTranslationDTO(
-            label="new. key",
+            label="new.key",
             feature="core",
             translations={
                 SupportedLanguage.DE: "Neu",
@@ -297,13 +297,13 @@ class TestCreateTranslationDTO:
             }
         )
 
-        assert dto.label == "new. key"
+        assert dto.label == "new.key"
         assert dto.feature == "core"
         assert len(dto.translations) == 2
 
     def test_empty_translations_raises_error(self):
         """Test that empty translations dict raises ValueError."""
-        with pytest. raises(ValueError, match="At least one translation must be provided"):
+        with pytest.raises(ValueError, match="At least one translation must be provided"):
             CreateTranslationDTO(
                 label="test",
                 feature="core",
@@ -325,7 +325,7 @@ class TestUpdateTranslationDTO:
 
         assert dto.label == "core.save"
         assert dto.feature == "core"
-        assert dto. language == SupportedLanguage. DE
+        assert dto.language == SupportedLanguage.DE
         assert dto.text == "Speichern (aktualisiert)"
 
     def test_empty_text_allowed(self):
@@ -355,7 +355,7 @@ class TestTranslationFilterDTO:
 
         assert dto.feature == "core"
         assert dto.language == SupportedLanguage.DE
-        assert dto.status == TranslationStatus. MISSING
+        assert dto.status == TranslationStatus.MISSING
         assert dto.search_text == "save"
         assert dto.only_missing is True
 

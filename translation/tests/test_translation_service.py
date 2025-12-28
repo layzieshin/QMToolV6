@@ -28,7 +28,7 @@ class TestTranslationService:
 
     def test_get_missing_translation_with_fallback(self, translation_service):
         """Test getting missing translation returns label as fallback."""
-        text = translation_service.get("nonexistent. key", SupportedLanguage. DE, "core", fallback_to_label=True)
+        text = translation_service.get("nonexistent.key", SupportedLanguage. DE, "core", fallback_to_label=True)
 
         assert text == "nonexistent.key"
 
@@ -43,7 +43,7 @@ class TestTranslationService:
         translation_service.get("missing.key", SupportedLanguage.EN, "test")
 
         # Should have logged missing translation
-        assert mock_audit_service.log. called
+        assert mock_audit_service.log.called
         call_details = mock_audit_service.log.call_args[1]["details"]
         assert call_details["event"] == "missing_translation"
         assert call_details["label"] == "missing.key"
@@ -51,7 +51,7 @@ class TestTranslationService:
     def test_get_missing_translation_logs_once(self, translation_service, mock_audit_service):
         """Test that same missing translation is only logged once."""
         # Call twice with same key
-        translation_service. get("missing.key", SupportedLanguage.EN, "test")
+        translation_service.get("missing.key", SupportedLanguage.EN, "test")
         translation_service.get("missing.key", SupportedLanguage.EN, "test")
 
         # Should only log once
@@ -62,13 +62,13 @@ class TestTranslationService:
         dto = translation_service.get_translation("core.save", SupportedLanguage.DE, "core")
 
         assert dto is not None
-        assert dto.label == "core. save"
+        assert dto.label == "core.save"
         assert dto.text == "Speichern"
         assert dto.status == TranslationStatus.COMPLETE
 
     def test_get_translation_set(self, translation_service):
         """Test getting translation set."""
-        set_dto = translation_service. get_translation_set("core. save", "core")
+        set_dto = translation_service.get_translation_set("core.save", "core")
 
         assert set_dto is not None
         assert set_dto.label == "core.save"
@@ -97,7 +97,7 @@ class TestTranslationService:
         results = translation_service.query_translations(filter_dto)
 
         assert len(results) >= 1
-        assert any("save" in r.label. lower() for r in results)
+        assert any("save" in r.label.lower() for r in results)
 
     def test_create_translation_success(self, translation_service, mock_audit_service):
         """Test creating new translation."""
@@ -106,13 +106,13 @@ class TestTranslationService:
             feature="core",
             translations={
                 SupportedLanguage.DE: "Neu",
-                SupportedLanguage. EN: "New"
+                SupportedLanguage.EN: "New"
             }
         )
 
         result = translation_service.create_translation(dto, actor_id=1)  # Admin
 
-        assert result. label == "new.key"
+        assert result.label == "new.key"
         assert mock_audit_service.log.called
 
     def test_create_translation_permission_denied(self, translation_service):
@@ -168,7 +168,7 @@ class TestTranslationService:
         dto = UpdateTranslationDTO(
             label="nonexistent",
             feature="core",
-            language=SupportedLanguage. DE,
+            language=SupportedLanguage.DE,
             text="Text"
         )
 
@@ -184,7 +184,7 @@ class TestTranslationService:
 
         # Should have logged with CRITICAL severity
         assert mock_audit_service.log.called
-        call_details = mock_audit_service. log.call_args[1]
+        call_details = mock_audit_service.log.call_args[1]
         assert call_details["severity"] == "CRITICAL"
 
     def test_delete_translation_permission_denied_for_qmb(self, translation_service):
