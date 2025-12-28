@@ -1,0 +1,24 @@
+{
+  "id": "user_management",
+  "label": "User Management",
+  "version": "1.0.0",
+  "main_class": "user_management.services.user_management_service.UserManagementService",
+  "visible_for": ["ADMIN"],
+  "is_core": true,
+  "sort_order":  2,
+  "requires_login": true,
+  "dependencies": ["authenticator"],
+  "audit": {
+    "must_audit": true,
+    "min_log_level": "INFO",
+    "critical_actions": [
+      "CREATE_USER",
+      "DELETE_USER",
+      "CHANGE_ROLE",
+      "CHANGE_PASSWORD"
+    ],
+    "retention_days": 730
+  },
+  "description":  "User and role management with policy-based access control",
+  "icon": "users-icon.svg"
+}

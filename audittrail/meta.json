@@ -1,0 +1,22 @@
+{
+  "id": "audittrail",
+  "label": "Audit Trail",
+  "version": "1.1.0",
+  "main_class": "audittrail. services.audit_service.AuditService",
+  "visible_for": ["ADMIN", "QMB"],
+  "is_core": true,
+  "sort_order": 3,
+  "requires_login":  true,
+  "dependencies": [],
+  "audit": {
+    "must_audit": false,
+    "min_log_level": "WARNING",
+    "critical_actions":  [
+      "DELETE_LOGS",
+      "EXPORT_LOGS"
+    ],
+    "retention_days": 2555
+  },
+  "description":  "Centralized audit logging with filtering, search, export and retention management",
+  "icon": "audit-icon.svg"
+}
