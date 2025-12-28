@@ -1,0 +1,22 @@
+{
+  "id": "authenticator",
+  "label": "Authenticator",
+  "version": "1.0.0",
+  "main_class": "authenticator.services.authenticator_service.AuthenticatorService",
+  "visible_for": ["ADMIN", "USER", "QMB"],
+  "is_core":  true,
+  "sort_order": 1,
+  "requires_login": false,
+  "dependencies": [],
+  "audit":  {
+    "must_audit":  true,
+    "min_log_level": "INFO",
+    "critical_actions": [
+      "LOGIN_FAILED",
+      "SESSION_EXPIRED"
+    ],
+    "retention_days": 365
+  },
+  "description": "Session-based authentication system with bcrypt password hashing",
+  "icon": "lock-icon.svg"
+}
