@@ -13,11 +13,11 @@ Design Principles:
 - JSON-serializable
 
 Author: QMToolV6 Development Team
-Version: 1.0.0
+Version: 1.1.0
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ class AuditLogDTO:
     id: int
     timestamp: datetime
     user_id: int
-    username: str
+    username:  str
     feature: str
     action: str
     log_level: str  # DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -48,7 +48,7 @@ class AuditLogDTO:
     session_id: Optional[str] = None
     module: Optional[str] = None
     function: Optional[str] = None
-    details: Optional[Dict] = field(default_factory=dict)
+    details: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """
@@ -59,16 +59,16 @@ class AuditLogDTO:
         """
         return {
             "id": self.id,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": self. timestamp.isoformat() if self.timestamp else None,
             "user_id": self.user_id,
-            "username": self.username,
+            "username":  self.username,
             "feature": self.feature,
             "action": self.action,
             "log_level": self.log_level,
-            "severity": self.severity,
+            "severity":  self.severity,
             "module": self.module,
             "function": self.function,
-            "details": self.details,
+            "details": self.details if self.details else {},
             "ip_address": self.ip_address,
             "session_id": self.session_id
         }
@@ -93,12 +93,12 @@ class CreateAuditLogDTO:
     # ===== Optionale Felder (mit Defaults) =====
     username: Optional[str] = None
     log_level: str = "INFO"
-    severity: str = "INFO"
+    severity:  str = "INFO"
     ip_address: Optional[str] = None
     session_id: Optional[str] = None
     module: Optional[str] = None
     function: Optional[str] = None
-    details: Optional[Dict] = field(default_factory=dict)
+    details: Optional[Dict[str, Any]] = field(default_factory=dict)
 
     def validate(self) -> None:
         """
@@ -113,11 +113,21 @@ class CreateAuditLogDTO:
         if self.user_id is None or self.user_id < 0:
             errors.append("user_id must be >= 0 (0 = System)")
 
-        if not self.feature or not self.feature.strip():
-            errors.append("feature must not be empty")
+        if not self.feature or not isinstance(self.feature, str) or not self.feature.strip():
+            errors.append("feature must be a non-empty string")
 
-        if not self.action or not self.action.strip():
-            errors.append("action must not be empty")
+        if not self.action or not isinstance(self.action, str) or not self.action.strip():
+            errors.append("action must be a non-empty string")
+
+        # Validierung für log_level
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if self.log_level not in valid_log_levels:
+            errors.append(f"log_level must be one of {valid_log_levels}, got '{self.log_level}'")
+
+        # Validierung für severity
+        valid_severities = ["INFO", "WARNING", "CRITICAL"]
+        if self.severity not in valid_severities:
+            errors.append(f"severity must be one of {valid_severities}, got '{self.severity}'")
 
         if errors:
             raise ValueError("; ".join(errors))
@@ -140,10 +150,10 @@ class CreateAuditLogDTO:
             feature=self.feature,
             action=self.action,
             log_level=self.log_level,
-            severity=self.severity,
+            severity=self. severity,
             module=self.module,
             function=self.function,
-            details=self.details or {},
+            details=self.details if self.details else {},
             ip_address=self.ip_address,
             session_id=self.session_id
         )
@@ -177,14 +187,14 @@ class AuditLogFilterDTO:
         Example:
             >>> filters = AuditLogFilterDTO(user_id=42, feature="auth")
             >>> where, params = filters.to_sql_conditions()
-            >>> print(where)  # "user_id = ? AND feature = ?"
+            >>> print(where)  # "user_id = ?  AND feature = ?"
             >>> print(params)  # [42, "auth"]
         """
         conditions = []
         params = []
 
         if self.user_id is not None:
-            conditions.append("user_id = ?")
+            conditions.append("user_id = ? ")
             params.append(self.user_id)
 
         if self.feature:
@@ -197,18 +207,18 @@ class AuditLogFilterDTO:
 
         if self.log_level:
             conditions.append("log_level = ?")
-            params.append(self.log_level)
+            params. append(self.log_level)
 
         if self.severity:
-            conditions.append("severity = ?")
+            conditions.append("severity = ? ")
             params.append(self.severity)
 
         if self.start_date:
-            conditions.append("timestamp >= ?")
+            conditions. append("timestamp >= ?")
             params.append(self.start_date.isoformat())
 
         if self.end_date:
-            conditions.append("timestamp <= ?")
+            conditions.append("timestamp <= ? ")
             params.append(self.end_date.isoformat())
 
         where_clause = " AND ".join(conditions) if conditions else "1=1"
@@ -223,10 +233,10 @@ class AuditLogFilterDTO:
         """
         return any([
             self.user_id is not None,
-            self.feature,
-            self.action,
-            self.log_level,
-            self.severity,
-            self.start_date,
-            self.end_date,
+            bool(self.feature),
+            bool(self.action),
+            bool(self.log_level),
+            bool(self.severity),
+            self.start_date is not None,
+            self.end_date is not None,
         ])

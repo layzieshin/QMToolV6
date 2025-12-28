@@ -11,7 +11,7 @@ Design Principles:
 - Erweiterbar für externe Sinks
 
 Author: QMToolV6 Development Team
-Version: 1.0.0
+Version: 1.1.0
 """
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
@@ -63,16 +63,17 @@ class AuditServiceInterface(ABC):
             ip_address: IP-Adresse des Clients (optional)
             session_id: Session-ID (optional, falls vorhanden)
             module: Python-Modul (optional, z.B. "services.workflow_service")
-            function: Funktionsname (optional, z.B. "start_workflow")
+            function: Funktionsname (optional, z.B.  "start_workflow")
 
         Returns:
             int: ID des erstellten Log-Eintrags
 
         Raises:
+            InvalidAuditLogException: Bei Validierungsfehlern
             AuditException: Bei allgemeinem Fehler
 
         Example:
-            >>> audit.log(
+            >>> audit. log(
             ...     user_id=42,
             ...     action="START_WORKFLOW",
             ...     feature="documentlifecycle",
@@ -96,7 +97,7 @@ class AuditServiceInterface(ABC):
             Liste von AuditLogDTO (sortiert nach timestamp DESC)
 
         Raises:
-            AuditAccessDeniedException: Wenn User keine Berechtigung hat
+            AuditAccessDeniedException:  Wenn User keine Berechtigung hat
 
         Example:
             >>> filters = AuditLogFilterDTO(
@@ -121,7 +122,7 @@ class AuditServiceInterface(ABC):
         Args:
             user_id: ID des Benutzers
             start_date: Optional - Logs ab diesem Datum
-            end_date: Optional - Logs bis zu diesem Datum
+            end_date:  Optional - Logs bis zu diesem Datum
 
         Returns:
             Liste von AuditLogDTO
@@ -145,7 +146,7 @@ class AuditServiceInterface(ABC):
         Args:
             feature: Feature-Name (z.B. "documentlifecycle")
             start_date: Optional - Logs ab diesem Datum
-            end_date: Optional - Logs bis zu diesem Datum
+            end_date:  Optional - Logs bis zu diesem Datum
 
         Returns:
             Liste von AuditLogDTO
@@ -163,11 +164,11 @@ class AuditServiceInterface(ABC):
         filters: Optional[AuditLogFilterDTO] = None
     ) -> List[AuditLogDTO]:
         """
-        Volltext-Suche in Logs (durchsucht 'details' JSON).
+        Volltext-Suche in Logs (durchsucht 'details' JSON und 'action').
 
         Args:
-            query: Suchbegriff (z.B. "document_id:123" oder "error")
-            filters: Optionale zusätzliche Filter
+            query:  Suchbegriff (z.B. "document_id:123" oder "error")
+            filters:  Optionale zusätzliche Filter
 
         Returns:
             Liste von AuditLogDTO
@@ -193,7 +194,7 @@ class AuditServiceInterface(ABC):
         Logs exportieren (json, csv).
 
         Args:
-            filters: Filter-Kriterien
+            filters:  Filter-Kriterien
             format: Exportformat ("json" oder "csv")
 
         Returns:
@@ -202,7 +203,7 @@ class AuditServiceInterface(ABC):
         Raises:
             AuditAccessDeniedException: Wenn User keine Export-Berechtigung hat
                 (nur Admin/QMB dürfen exportieren)
-            ValueError: Wenn format ungültig ist
+            ExportFormatException: Wenn format ungültig ist
 
         Example:
             >>> filters = AuditLogFilterDTO(feature="authenticator")
@@ -211,20 +212,25 @@ class AuditServiceInterface(ABC):
         pass
 
     @abstractmethod
-    def delete_old_logs(self, feature: Optional[str] = None) -> int:
+    def delete_old_logs(
+        self,
+        feature: Optional[str] = None,
+        retention_days: Optional[int] = None
+    ) -> int:
         """
         Alte Logs löschen (respektiert retention_days aus meta.json).
 
         Args:
             feature: Optional - nur Logs dieses Features löschen
+            retention_days: Optional - explizite Retention-Tage (überschreibt Config)
 
         Returns:
             Anzahl gelöschter Logs
 
         Note:
-            - Global: Löscht alle Logs älter als globaler retention_days
+            - Global:  Löscht alle Logs älter als globaler retention_days
             - Feature-spezifisch: Nutzt retention_days aus meta.json des Features
-            - Beispiel: documentlifecycle.meta.json → retention_days: 2555
+            - Beispiel: documentlifecycle. meta.json → retention_days:  2555
 
         Example:
             >>> deleted_count = audit.delete_old_logs(feature="authenticator")
@@ -242,20 +248,20 @@ class AuditServiceInterface(ABC):
         Minimalen Log-Level setzen (global oder feature-spezifisch).
 
         Args:
-            level: Neuer Min-Level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            level:  Neuer Min-Level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
             feature: Optional - nur für dieses Feature (überschreibt global)
 
         Note:
             - Logs unter diesem Level werden nicht gespeichert
-            - Production: Empfohlen INFO oder WARNING
+            - Production:  Empfohlen INFO oder WARNING
             - Development: DEBUG für detaillierte Logs
 
         Example:
-            >>> # Global: Nur WARNING+ loggen
+            >>> # Global:  Nur WARNING+ loggen
             >>> audit.set_min_log_level(LogLevel.WARNING)
             >>>
             >>> # Feature-spezifisch: documentlifecycle DEBUG, Rest WARNING
-            >>> audit.set_min_log_level(LogLevel.DEBUG, feature="documentlifecycle")
+            >>> audit.set_min_log_level(LogLevel. DEBUG, feature="documentlifecycle")
         """
         pass
 
