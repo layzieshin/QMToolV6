@@ -301,7 +301,7 @@ admin = user_service.create_user(admin_dto, actor_id=0)  # System erstellt
 audit_repo = AuditRepository(": memory:")
 from unittest.mock import Mock
 configurator = Mock()
-configurator.get_feature_meta. return_value = {"audit": {"must_audit": True}}
+configurator.get_feature_meta.return_value = {"audit": {"must_audit": True}}
 
 from audittrail.services.policy.audit_policy import AuditPolicy
 audit_service = AuditService(audit_repo, AuditPolicy(), configurator)
