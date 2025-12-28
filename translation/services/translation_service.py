@@ -1,21 +1,41 @@
-from typing import Optional
+"""
+Translation Service Implementation
+===================================
+
+Core business logic for translation management.
+"""
+
+from typing import Optional, List, Dict, Set, Tuple
+
 from translation.services.translation_service_interface import TranslationServiceInterface
 from translation.repository.translation_repository_interface import TranslationRepositoryInterface
-from translation.services.policy.translation_policy import TranslationPolicy
 from translation.services.feature_discovery_service import FeatureDiscoveryService
+from translation.services.policy.translation_policy import TranslationPolicy
 from translation.dto.translation_dto import (
     TranslationDTO,
     TranslationSetDTO,
     CreateTranslationDTO,
-    UpdateTranslationDTO
+    UpdateTranslationDTO,
 )
-from translation.enum.language_enum import SupportedLanguage
+from translation.dto.translation_filter_dto import TranslationFilterDTO
+from translation.enum.translation_enum import SupportedLanguage
 from translation.exceptions.translation_exceptions import (
     TranslationNotFoundError,
-    TranslationAlreadyExistsError
+    TranslationAlreadyExistsError,
 )
-from audittrail.services.audit_service_interface import AuditServiceInterface
-from audittrail.enum.audit_enum import LogLevel, AuditSeverity, AuditActionType
+
+# Conditional import for AuditTrail (optional dependency)
+try:
+    from audittrail.services.audit_service_interface import AuditServiceInterface
+    from audittrail.enum.audit_enum import LogLevel, AuditSeverity, AuditActionType
+
+    AUDIT_AVAILABLE = True
+except ImportError:
+    AUDIT_AVAILABLE = False
+    AuditServiceInterface = None  # type: ignore
+    LogLevel = None  # type: ignore
+    AuditSeverity = None  # type: ignore
+    AuditActionType = None  # type:  ignore
 
 
 class TranslationService(TranslationServiceInterface):
@@ -23,24 +43,84 @@ class TranslationService(TranslationServiceInterface):
     Core translation service implementation.
 
     Dependencies:
-    - TranslationRepository:  Data access
+    -------------
+    - TranslationRepository: Data access
     - TranslationPolicy: Authorization
-    - AuditService: Change tracking
+    - AuditService: Change tracking (optional)
     - FeatureDiscoveryService:  Auto-loading
+
+    Usage:
+    ------
+        >>> from translation.repository.translation_repository import InMemoryTranslationRepository
+        >>> from translation.services.policy.translation_policy import TranslationPolicy
+        >>> from translation.services.feature_discovery_service import FeatureDiscoveryService
+
+        >>> repo = InMemoryTranslationRepository()
+        >>> policy = TranslationPolicy(user_service)
+        >>> discovery = FeatureDiscoveryService()
+        >>> service = TranslationService(repo, policy, None, discovery)
+
+        >>> service.load_all_features()
+        >>> text = service.get("core.save", SupportedLanguage.DE, "core")
+        >>> print(text)
+        'Speichern'
     """
 
     def __init__(
             self,
             repository: TranslationRepositoryInterface,
             policy: TranslationPolicy,
-            audit_service: AuditServiceInterface,
+            audit_service: Optional[AuditServiceInterface],
             discovery_service: FeatureDiscoveryService
     ):
+        """
+        Initialize translation service.
+
+        Args:
+            repository: Translation data repository
+            policy: Authorization policy
+            audit_service:  Audit trail service (optional)
+            discovery_service: Feature discovery service
+        """
         self._repo = repository
         self._policy = policy
         self._audit = audit_service
         self._discovery = discovery_service
-        self._missing_logged: set[tuple[str, str, str]] = set()  # (feature, label, lang)
+        self._missing_logged: Set[Tuple[str, str, str]] = set()  # (feature, label, lang)
+
+    def _log_audit(
+            self,
+            user_id: int,
+            action: str,
+            log_level: str,
+            severity: str,
+            details: dict
+    ) -> None:
+        """
+        Internal helper for audit logging (gracefully handles missing AuditService).
+
+        Args:
+            user_id:  Actor user ID
+            action: Action type
+            log_level: Log level
+            severity: Audit severity
+            details: Additional details
+        """
+        if not self._audit or not AUDIT_AVAILABLE:
+            return
+
+        try:
+            self._audit.log(
+                user_id=user_id,
+                action=getattr(AuditActionType, action, AuditActionType.OTHER),
+                feature="translation",
+                log_level=getattr(LogLevel, log_level, LogLevel.INFO),
+                severity=getattr(AuditSeverity, severity, AuditSeverity.INFO),
+                details=details
+            )
+        except Exception:
+            # Silently fail if audit logging fails (don't break core functionality)
+            pass
 
     def get(
             self,
@@ -49,9 +129,7 @@ class TranslationService(TranslationServiceInterface):
             feature: str,
             fallback_to_label: bool = True
     ) -> str:
-        """
-        Get translation with fallback and logging.
-        """
+        """Get translation text with fallback and logging."""
         translation = self._repo.get_translation(label, language, feature)
 
         if translation and translation.text.strip():
@@ -60,12 +138,11 @@ class TranslationService(TranslationServiceInterface):
         # Log missing translation (once per label/lang/feature)
         key = (feature, label, language.value)
         if key not in self._missing_logged:
-            self._audit.log(
+            self._log_audit(
                 user_id=0,  # System
-                action=AuditActionType.OTHER,
-                feature="translation",
-                log_level=LogLevel.WARNING,
-                severity=AuditSeverity.LOW,
+                action="OTHER",
+                log_level="WARNING",
+                severity="LOW",
                 details={
                     "event": "missing_translation",
                     "label": label,
@@ -77,14 +154,90 @@ class TranslationService(TranslationServiceInterface):
 
         return label if fallback_to_label else ""
 
+    def get_translation(
+            self,
+            label: str,
+            language: SupportedLanguage,
+            feature: str
+    ) -> Optional[TranslationDTO]:
+        """Get full TranslationDTO."""
+        return self._repo.get_translation(label, language, feature)
+
+    def get_translation_set(self, label: str, feature: str) -> Optional[TranslationSetDTO]:
+        """Get complete translation set."""
+        return self._repo.get_translation_set(label, feature)
+
+    def query_translations(self, filter_dto: TranslationFilterDTO) -> List[TranslationSetDTO]:
+        """
+        Query translations with filter criteria.
+
+        Applies filtering based on:
+        - feature
+        - language (filters sets that have this language)
+        - status
+        - search_text (in labels)
+        - only_missing
+        """
+        # Get base set
+        if filter_dto.feature:
+            translation_sets = self._repo.get_all_by_feature(filter_dto.feature)
+        else:
+            # Get all features
+            all_sets = []
+            for feature_name in self._repo.get_all_features():
+                all_sets.extend(self._repo.get_all_by_feature(feature_name))
+            translation_sets = all_sets
+
+        # Apply filters
+        results = []
+        for trans_set in translation_sets:
+            # Language filter (must have translation for this language)
+            if filter_dto.language:
+                if filter_dto.language not in trans_set.translations:
+                    continue
+
+            # Status filter
+            if filter_dto.status:
+                # Check if any language matches status
+                has_status = False
+                for lang in SupportedLanguage:
+                    text = trans_set.translations.get(lang, "")
+                    if filter_dto.status.value == "missing" and not text.strip():
+                        has_status = True
+                        break
+                    elif filter_dto.status.value == "complete" and text.strip():
+                        has_status = True
+                        break
+                if not has_status:
+                    continue
+
+            # Search text filter
+            if filter_dto.search_text:
+                search_lower = filter_dto.search_text.lower()
+                if search_lower not in trans_set.label.lower():
+                    # Also search in translation texts
+                    found_in_text = any(
+                        search_lower in text.lower()
+                        for text in trans_set.translations.values()
+                    )
+                    if not found_in_text:
+                        continue
+
+            # Only missing filter
+            if filter_dto.only_missing:
+                if not trans_set.get_missing_languages():
+                    continue
+
+            results.append(trans_set)
+
+        return results
+
     def create_translation(
             self,
             dto: CreateTranslationDTO,
             actor_id: int
     ) -> TranslationSetDTO:
-        """
-        Create new translation set.
-        """
+        """Create new translation set."""
         # Policy check
         self._policy.enforce_create(actor_id)
 
@@ -92,7 +245,7 @@ class TranslationService(TranslationServiceInterface):
         existing = self._repo.get_translation_set(dto.label, dto.feature)
         if existing:
             raise TranslationAlreadyExistsError(
-                f"Translation already exists:  {dto.feature}.{dto.label}"
+                f"Translation already exists: {dto.feature}. {dto.label}"
             )
 
         # Create
@@ -104,16 +257,15 @@ class TranslationService(TranslationServiceInterface):
         self._repo.create_translation_set(translation_set)
 
         # Audit
-        self._audit.log(
+        self._log_audit(
             user_id=actor_id,
-            action=AuditActionType.CREATE,
-            feature="translation",
-            log_level=LogLevel.INFO,
-            severity=AuditSeverity.INFO,
+            action="CREATE",
+            log_level="INFO",
+            severity="INFO",
             details={
                 "label": dto.label,
                 "feature": dto.feature,
-                "languages": list(dto.translations.keys())
+                "languages": [lang.value for lang in dto.translations.keys()]
             }
         )
 
@@ -124,9 +276,7 @@ class TranslationService(TranslationServiceInterface):
             dto: UpdateTranslationDTO,
             actor_id: int
     ) -> TranslationDTO:
-        """
-        Update single translation.
-        """
+        """Update single translation."""
         # Policy check
         self._policy.enforce_update(actor_id)
 
@@ -134,7 +284,7 @@ class TranslationService(TranslationServiceInterface):
         old_translation = self._repo.get_translation(dto.label, dto.language, dto.feature)
         if not old_translation:
             raise TranslationNotFoundError(
-                f"Translation not found: {dto.feature}.{dto.label}.{dto.language.value}"
+                f"Translation not found: {dto.feature}.{dto.label}. {dto.language.value}"
             )
 
         # Update
@@ -144,12 +294,11 @@ class TranslationService(TranslationServiceInterface):
         updated = self._repo.get_translation(dto.label, dto.language, dto.feature)
 
         # Audit
-        self._audit.log(
+        self._log_audit(
             user_id=actor_id,
-            action=AuditActionType.UPDATE,
-            feature="translation",
-            log_level=LogLevel.INFO,
-            severity=AuditSeverity.INFO,
+            action="UPDATE",
+            log_level="INFO",
+            severity="INFO",
             details={
                 "label": dto.label,
                 "feature": dto.feature,
@@ -162,9 +311,7 @@ class TranslationService(TranslationServiceInterface):
         return updated
 
     def delete_translation(self, label: str, feature: str, actor_id: int) -> None:
-        """
-        Delete translation set.
-        """
+        """Delete translation set."""
         # Policy check (ADMIN only)
         self._policy.enforce_delete(actor_id)
 
@@ -179,46 +326,35 @@ class TranslationService(TranslationServiceInterface):
         self._repo.delete_translation_set(label, feature)
 
         # Audit (CRITICAL severity)
-        self._audit.log(
+        self._log_audit(
             user_id=actor_id,
-            action=AuditActionType.DELETE,
-            feature="translation",
-            log_level=LogLevel.WARNING,
-            severity=AuditSeverity.CRITICAL,
+            action="DELETE",
+            log_level="WARNING",
+            severity="CRITICAL",
             details={
                 "label": label,
                 "feature": feature,
-                "deleted_languages": list(translation_set.translations.keys())
+                "deleted_languages": [lang.value for lang in translation_set.translations.keys()]
             }
         )
 
-    def get_missing_for_feature(self, feature: str) -> list[TranslationSetDTO]:
+    def get_missing_for_feature(self, feature: str) -> List[TranslationSetDTO]:
         """Get translation sets with missing languages."""
         return self._repo.get_missing_translations(feature)
 
-    def get_coverage(self, feature: str) -> dict[SupportedLanguage, float]:
-        """
-        Calculate coverage per language.
-        """
-        all_translations = self._repo.get_all_by_feature(feature)
-        if not all_translations:
-            return {lang: 0.0 for lang in SupportedLanguage}
+    def get_coverage(self, feature: str) -> Dict[SupportedLanguage, float]:
+        """Calculate coverage per language."""
+        return self._repo.get_coverage(feature)
 
-        total = len(all_translations)
-        coverage = {}
+    def get_all_features(self) -> List[str]:
+        """Get list of all loaded features."""
+        return self._repo.get_all_features()
 
-        for lang in SupportedLanguage:
-            complete_count = sum(
-                1 for trans_set in all_translations
-                if lang in trans_set.translations and trans_set.translations[lang].strip()
-            )
-            coverage[lang] = complete_count / total if total > 0 else 0.0
-
-        return coverage
-
-    def load_all_features(self) -> dict[str, int]:
+    def load_all_features(self) -> Dict[str, int]:
         """
         Auto-discover and load all features.
+
+        Logs errors but continues loading other features.
         """
         discovered = self._discovery.discover_features()
         loaded = {}
@@ -227,18 +363,32 @@ class TranslationService(TranslationServiceInterface):
             try:
                 count = self._repo.load_feature_tsv(feature_name, str(tsv_path))
                 loaded[feature_name] = count
+
+                # Audit successful load
+                self._log_audit(
+                    user_id=0,  # System
+                    action="OTHER",
+                    log_level="INFO",
+                    severity="INFO",
+                    details={
+                        "event": "feature_loaded",
+                        "feature": feature_name,
+                        "count": count,
+                        "path": str(tsv_path)
+                    }
+                )
             except Exception as e:
                 # Log error but continue
-                self._audit.log(
+                self._log_audit(
                     user_id=0,
-                    action=AuditActionType.OTHER,
-                    feature="translation",
-                    log_level=LogLevel.ERROR,
-                    severity=AuditSeverity.MEDIUM,
+                    action="OTHER",
+                    log_level="ERROR",
+                    severity="MEDIUM",
                     details={
                         "event": "load_failed",
                         "feature": feature_name,
-                        "error": str(e)
+                        "error": str(e),
+                        "path": str(tsv_path)
                     }
                 )
 
@@ -252,14 +402,56 @@ class TranslationService(TranslationServiceInterface):
     ) -> None:
         """
         Export feature translations.
+
+        Currently only TSV format is implemented.
         """
         if format == "tsv":
             self._repo.persist_feature_tsv(feature, output_path)
         elif format == "json":
-            # TODO: Implement JSON export
-            raise NotImplementedError("JSON export not yet implemented")
+            self._export_json(feature, output_path)
         elif format == "csv":
-            # TODO: Implement CSV export
-            raise NotImplementedError("CSV export not yet implemented")
+            self._export_csv(feature, output_path)
         else:
-            raise ValueError(f"Unsupported export format: {format}")
+            raise ValueError(f"Unsupported export format: {format}.  Supported: tsv, json, csv")
+
+    def _export_json(self, feature: str, output_path: str) -> None:
+        """Export translations as JSON."""
+        import json
+        from pathlib import Path
+
+        translation_sets = self._repo.get_all_by_feature(feature)
+
+        # Convert to JSON-serializable format
+        data = {
+            "feature": feature,
+            "translations": []
+        }
+
+        for trans_set in translation_sets:
+            data["translations"].append({
+                "label": trans_set.label,
+                "texts": {lang.value: text for lang, text in trans_set.translations.items()}
+            })
+
+        # Write with pretty formatting
+        Path(output_path).write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def _export_csv(self, feature: str, output_path: str) -> None:
+        """Export translations as CSV (Excel-compatible)."""
+        import csv
+        from pathlib import Path
+
+        translation_sets = self._repo.get_all_by_feature(feature)
+
+        with Path(output_path).open("w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+
+            # Write header
+            writer.writerow(["label"] + SupportedLanguage.all_codes())
+
+            # Write rows
+            for trans_set in sorted(translation_sets, key=lambda x: x.label):
+                row = [trans_set.label]
+                for lang in SupportedLanguage:
+                    row.append(trans_set.translations.get(lang, ""))
+                writer.writerow(row)

@@ -1,0 +1,31 @@
+label	de	en
+translation. feature_name	Übersetzungsverwaltung	Translation Management
+translation.create	Übersetzung erstellen	Create Translation
+translation.update	Übersetzung aktualisieren	Update Translation
+translation.delete	Übersetzung löschen	Delete Translation
+translation.export	Exportieren	Export
+translation.import	Importieren	Import
+translation.missing	Fehlend	Missing
+translation.complete	Vollständig	Complete
+translation.deprecated	Veraltet	Deprecated
+translation.coverage	Abdeckung	Coverage
+translation.language_de	Deutsch	German
+translation.language_en	Englisch	English
+translation.label	Schlüssel	Label
+translation.text	Text	Text
+translation.feature	Feature	Feature
+translation.status	Status	Status
+translation.not_found	Übersetzung nicht gefunden	Translation not found
+translation.already_exists	Übersetzung existiert bereits	Translation already exists
+translation.permission_denied	Keine Berechtigung	Permission denied
+translation.validation_error	Validierungsfehler	Validation error
+translation.load_error	Ladefehler	Load error
+translation.invalid_language	Ungültige Sprache	Invalid language
+translation.created	Übersetzung erstellt	Translation created
+translation.updated	Übersetzung aktualisiert	Translation updated
+translation. deleted	Übersetzung gelöscht	Translation deleted
+translation. discovery_started	Feature-Erkennung gestartet	Feature discovery started
+translation.discovery_completed	Feature-Erkennung abgeschlossen	Feature discovery completed
+translation.features_loaded	Features geladen	Features loaded
+translation. export_success	Export erfolgreich	Export successful
+translation.export_failed	Export fehlgeschlagen	Export failed

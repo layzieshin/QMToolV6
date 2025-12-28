@@ -1,0 +1,35 @@
+{
+  "feature_name": "translation",
+  "display_name": "Translation Management",
+  "version": "1.0.0",
+  "description": "Multi-language translation system with TSV-based storage and auto-discovery",
+  "author":  "QMToolV6 Team",
+  "dependencies": [
+    "user_management",
+    "audittrail"
+  ],
+  "capabilities": [
+    "multi_language_support",
+    "feature_discovery",
+    "translation_editing",
+    "coverage_analytics",
+    "export_import"
+  ],
+  "permissions": {
+    "view":  ["USER", "ADMIN", "QMB"],
+    "create": ["ADMIN", "QMB"],
+    "update": ["ADMIN", "QMB"],
+    "delete": ["ADMIN"]
+  },
+  "audit":  {
+    "must_audit":  true,
+    "critical_actions": ["DELETE", "UPDATE"],
+    "retention_days": 2555
+  },
+  "configuration": {
+    "default_language": "de",
+    "supported_languages": ["de", "en"],
+    "fallback_to_label": true,
+    "log_missing_keys": true
+  }
+}
