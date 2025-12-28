@@ -290,7 +290,7 @@ class TestAuditService:
     # ===== get_feature_audit_config() Tests =====
 
     def test_get_feature_audit_config_success(self, audit_service):
-        """Feature-Config aus meta. json laden."""
+        """Feature-Config aus meta.json laden."""
         config = audit_service.get_feature_audit_config("auth")
 
         assert config["must_audit"] is True

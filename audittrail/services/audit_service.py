@@ -36,7 +36,7 @@ class AuditService(AuditServiceInterface):
         Args:
             repository: AuditRepository-Instanz
             policy: AuditPolicy-Instanz
-            configurator:  Configurator-Instanz (für meta. json)
+            configurator:  Configurator-Instanz (für meta.json)
         """
         self._repository = repository
         self._policy = policy

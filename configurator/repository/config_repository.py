@@ -112,7 +112,7 @@ class ConfigRepository:
             logger.info(f"Loaded app_config.json from {config_path}")
 
         except json.JSONDecodeError as e:
-            error_msg = f"Invalid JSON in app_config. json: {e}"
+            error_msg = f"Invalid JSON in app_config.json: {e}"
             if strict:
                 raise ConfigValidationException(
                     "app_config.json",

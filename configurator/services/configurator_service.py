@@ -74,7 +74,7 @@ class ConfiguratorService(ConfiguratorServiceInterface):
             Liste aller gefundenen Feature-Descriptors
 
         Raises:
-            InvalidMetaException: Wenn meta. json ungültig ist
+            InvalidMetaException: Wenn meta.json ungültig ist
         """
         logger.info("Starting feature discovery")
         descriptors = self._feature_repository.discover_all()

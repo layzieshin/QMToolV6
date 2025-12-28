@@ -35,7 +35,7 @@ class TestFeatureDiscovery:
 
             feature_dir = temp_features_root / feature_id
             feature_dir.mkdir(parents=True, exist_ok=True)
-            (feature_dir / "meta. json").write_text(
+            (feature_dir / "meta.json").write_text(
                 json.dumps(meta),
                 encoding="utf-8"
             )
@@ -127,7 +127,7 @@ class TestFeatureDiscovery:
         # Arrange
         auth_dir = temp_features_root / "authenticator"
         auth_dir.mkdir(parents=True, exist_ok=True)
-        (auth_dir / "meta. json").write_text(
+        (auth_dir / "meta.json").write_text(
             json.dumps(sample_feature_meta),
             encoding="utf-8"
         )

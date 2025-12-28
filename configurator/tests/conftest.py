@@ -106,7 +106,7 @@ def create_app_config_json(
 @pytest.fixture
 def sample_feature_meta() -> Dict[str, Any]:
     """
-    Sample Feature meta. json.
+    Sample Feature meta.json.
 
     Returns:
         Dict mit gültigen Meta-Daten

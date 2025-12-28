@@ -8,7 +8,7 @@ Version: 1.0.0
 """
 from configurator.services.configurator_service import ConfiguratorService
 from configurator.repository.feature_repository import FeatureRepository
-from configurator.repository. config_repository import ConfigRepository
+from configurator.repository.config_repository import ConfigRepository
 
 __version__ = "1.0.0"
 

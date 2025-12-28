@@ -107,7 +107,7 @@ class TestGetAllFeatures:
 
         public_dir = temp_features_root / "public"
         public_dir.mkdir(parents=True, exist_ok=True)
-        (public_dir / "meta. json").write_text(
+        (public_dir / "meta.json").write_text(
             json.dumps(meta1),
             encoding="utf-8"
         )
@@ -146,7 +146,7 @@ class TestGetAllFeatures:
         meta1["visible_for"] = []
         public_dir = temp_features_root / "public"
         public_dir.mkdir(parents=True, exist_ok=True)
-        (public_dir / "meta. json").write_text(json.dumps(meta1), encoding="utf-8")
+        (public_dir / "meta.json").write_text(json.dumps(meta1), encoding="utf-8")
 
         # 2. Nur ADMIN
         meta2 = sample_feature_meta.copy()
@@ -243,7 +243,7 @@ class TestValidateMeta:
         configurator_service: ConfiguratorService,
         sample_feature_meta: dict
     ) -> None:
-        """validate_meta gibt True für gültige meta. json."""
+        """validate_meta gibt True für gültige meta.json."""
         # Arrange
         auth_dir = temp_features_root / "authenticator"
         auth_dir.mkdir(parents=True, exist_ok=True)

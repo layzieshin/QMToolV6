@@ -335,7 +335,7 @@ audit_service.log(
 ```
 configurator/
 ├── dto/
-│   └── feature_descriptor_dto.py  # Meta. json-Struktur
+│   └── feature_descriptor_dto.py  # Meta.json-Struktur
 ├── repository/
 │   └── config_repository.py       # Lädt/speichert meta.json
 ├── services/

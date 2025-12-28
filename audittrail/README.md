@@ -259,7 +259,7 @@ csv_data = audit_service.export_logs(filters, format="csv")
 ### 🧹 Retention & Cleanup
 
 ```python
-# Feature-spezifisch (nutzt retention_days aus meta. json)
+# Feature-spezifisch (nutzt retention_days aus meta.json)
 deleted = audit_service.delete_old_logs(feature="auth")
 
 # Global (alle Features)

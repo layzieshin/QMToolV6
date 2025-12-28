@@ -2,7 +2,7 @@
   "id": "configurator",
   "label": "Configurator",
   "version": "1.0.0",
-  "main_class": "configurator.services. configurator_service.ConfiguratorService",
+  "main_class": "configurator.services.configurator_service.ConfiguratorService",
   "visible_for": ["ADMIN"],
   "is_core": true,
   "sort_order":  0,
@@ -17,6 +17,6 @@
     ],
     "retention_days": 365
   },
-  "description": "Feature discovery, meta. json validation and app configuration management",
+  "description": "Feature discovery, meta.json validation and app configuration management",
   "icon": "settings-icon.svg"
 }
