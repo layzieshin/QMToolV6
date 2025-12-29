@@ -327,8 +327,9 @@ pytest licensing/tests/ -v
 - ✅ 6 tests for feature gatekeeper
 - ✅ 4 tests for Windows fingerprint provider
 - ✅ 4 tests for integration scenarios
+- ✅ 3 tests for end-to-end licensing flow with configurator
 
-**Total**: 24 tests, all passing
+**Total**: 27 tests, all passing
 
 ### Test Scenarios
 
