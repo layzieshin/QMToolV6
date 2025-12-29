@@ -1,0 +1,33 @@
+{
+  "id": "licensing",
+  "label": "Licensing",
+  "version": "1.0.0",
+  "main_class": "licensing.LOGIC.services.licensing_service.LicensingService",
+  "visible_for": ["ADMIN"],
+  "is_core": true,
+  "sort_order": 0,
+  "requires_login": false,
+  "dependencies": [],
+  "audit": {
+    "must_audit": true,
+    "min_log_level": "INFO",
+    "critical_actions": [
+      "LICENSE_VERIFICATION_FAILED",
+      "FINGERPRINT_MISMATCH",
+      "LICENSE_EXPIRED"
+    ],
+    "retention_days": 2555
+  },
+  "description": "Hardware-based offline licensing system with feature entitlements",
+  "icon": "license-icon.svg",
+  "configuration": {
+    "license_path": "%PROGRAMDATA%\\QMTool\\license.qmlic",
+    "public_key_path": "assets\\licensing\\public_key.pem",
+    "max_allowed_fingerprints": 3
+  },
+  "capabilities": [
+    "licensing.verify",
+    "licensing.entitlements"
+  ],
+  "permissions": []
+}

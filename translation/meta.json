@@ -1,13 +1,28 @@
 {
-  "feature_name": "translation",
-  "display_name": "Translation Management",
+  "id": "translation",
+  "label": "Translation Management",
   "version": "1.0.0",
-  "description": "Multi-language translation system with TSV-based storage and auto-discovery",
-  "author":  "QMToolV6 Team",
+  "main_class": "translation.services.translation_service.TranslationService",
+  "visible_for": ["USER", "ADMIN", "QMB"],
+  "is_core": false,
+  "sort_order": 10,
+  "requires_login": true,
   "dependencies": [
     "user_management",
     "audittrail"
   ],
+  "audit": {
+    "must_audit": true,
+    "min_log_level": "INFO",
+    "critical_actions": ["DELETE", "UPDATE"],
+    "retention_days": 2555
+  },
+  "description": "Multi-language translation system with TSV-based storage and auto-discovery",
+  "licensing": {
+    "requires_license": true,
+    "feature_code": "translation",
+    "enforcement": "registry"
+  },
   "capabilities": [
     "multi_language_support",
     "feature_discovery",
@@ -16,15 +31,10 @@
     "export_import"
   ],
   "permissions": {
-    "view":  ["USER", "ADMIN", "QMB"],
+    "view": ["USER", "ADMIN", "QMB"],
     "create": ["ADMIN", "QMB"],
     "update": ["ADMIN", "QMB"],
     "delete": ["ADMIN"]
-  },
-  "audit":  {
-    "must_audit":  true,
-    "critical_actions": ["DELETE", "UPDATE"],
-    "retention_days": 2555
   },
   "configuration": {
     "default_language": "de",
