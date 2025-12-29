@@ -26,9 +26,9 @@ ENV/
 env/
 .venv
 
-# IDE
-.idea/
+# IDEs
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
@@ -47,6 +47,7 @@ htmlcov/
 
 # Logs
 *.log
+example.db
 
 # OS
 .DS_Store
@@ -57,3 +58,6 @@ Thumbs.db
 data/
 temp/
 config/local_*.json
+# Temporary files
+*.tmp
+*.log

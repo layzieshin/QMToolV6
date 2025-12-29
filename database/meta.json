@@ -1,0 +1,23 @@
+{
+  "id": "database",
+  "label": "Database Core",
+  "version": "1.0.0",
+  "main_class": "database.logic.services.database_service.DatabaseService",
+  "visible_for": [],
+  "is_core": true,
+  "sort_order": 1,
+  "requires_login": false,
+  "dependencies": [],
+  "audit": {
+    "must_audit": true,
+    "min_log_level": "WARNING",
+    "critical_actions": [
+      "SCHEMA_MIGRATION",
+      "DATABASE_RESET",
+      "TRANSACTION_ROLLBACK"
+    ],
+    "retention_days": 365
+  },
+  "description": "Core database infrastructure with SQLAlchemy 2.0, thread-local sessions, and Unit-of-Work pattern",
+  "icon": "database-icon.svg"
+}
