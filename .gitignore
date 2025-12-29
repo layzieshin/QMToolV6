@@ -42,6 +42,7 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+example.db
 
 # OS
 .DS_Store
