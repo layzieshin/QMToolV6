@@ -20,10 +20,11 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Virtual Environment
 venv/
 ENV/
 env/
+.venv
 
 # IDEs
 .vscode/
@@ -37,17 +38,26 @@ env/
 .coverage
 htmlcov/
 .tox/
+.nox/
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Logs
+*.log
 example.db
 
 # OS
 .DS_Store
 Thumbs.db
 
+# QMTool specific
+*.qmlic
+data/
+temp/
+config/local_*.json
 # Temporary files
 *.tmp
 *.log
