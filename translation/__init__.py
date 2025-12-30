@@ -1,85 +1,64 @@
 """
-Translation Feature
-===================
+Core translation API (MASTERPROMPT)
+===================================
 
-Provides multi-language support for QMToolV6.
+The translation feature exposes a simple, function-based API:
 
-Features:
-- TSV-based translation storage (feature-specific labels. tsv files)
-- Auto-discovery of feature translations
-- Policy-based translation management (Admin/QMB can edit)
-- Full audit trail integration
-- Missing translation detection and logging
-- Export/import capabilities
+    set_global_language(lang)
+    set_user_language(user_id, lang)
+    get_effective_language(user_id)
+    available_languages(feature_id=None)
+    load_features(feature_descriptors)
+    t(key, *, feature_id, user_id=None)
 
-Usage:
-------
-    from translation. services.translation_service import TranslationService
-    from translation.repository.translation_repository import InMemoryTranslationRepository
-    from translation.enum.translation_enum import SupportedLanguage
-
-    # Setup
-    repo = InMemoryTranslationRepository()
-    service = TranslationService(repo, policy, audit_service, discovery_service)
-
-    # Get translation
-    text = service.get("core.save", SupportedLanguage.DE, "core")
-    # Returns: "Speichern"
-
-Public API:
------------
-- TranslationService:  Core business logic
-- TranslationServiceInterface: Service contract
-- TranslationDTO:  Immutable translation data
-- SupportedLanguage: Language enum (DE, EN)
-- TranslationException: Base exception
-
-Author: QMToolV6 Team
-Version: 1.0.0
+All functions are thin wrappers around a singleton TranslationEngine instance.
 """
 
-from translation.dto.translation_dto import (
-    TranslationDTO,
-    TranslationSetDTO,
-    CreateTranslationDTO,
-    UpdateTranslationDTO,
-)
-from translation.enum.translation_enum import (
-    SupportedLanguage,
-    TranslationStatus,
-)
-from translation.exceptions.translation_exceptions import (
-    TranslationException,
-    TranslationNotFoundError,
-    TranslationAlreadyExistsError,
-    TranslationPermissionError,
-    TranslationValidationError,
-    TranslationLoadError,
-    InvalidLanguageError,
-)
-from translation.services.translation_service_interface import (
-    TranslationServiceInterface,
-)
+from typing import Iterable, Optional
+
+from translation.services.translation_engine import FeatureDescriptor, TranslationEngine
+
+_engine = TranslationEngine()
+
+
+def reset_state() -> None:
+    """Reset engine state (used in tests)."""
+    _engine.reset()
+
+
+def load_features(feature_descriptors: Iterable[FeatureDescriptor]) -> None:
+    _engine.load_features(feature_descriptors)
+
+
+def set_global_language(lang: str) -> bool:
+    return _engine.set_global_language(lang)
+
+
+def set_user_language(user_id: int, lang: str) -> bool:
+    return _engine.set_user_language(user_id, lang)
+
+
+def get_effective_language(user_id: Optional[int]) -> str:
+    return _engine.get_effective_language(user_id)
+
+
+def available_languages(feature_id: Optional[str] = None) -> list[str]:
+    return _engine.available_languages(feature_id)
+
+
+def t(key: str, *, feature_id: str, user_id: Optional[int] = None) -> str:
+    return _engine.t(key, feature_id=feature_id, user_id=user_id)
+
 
 __all__ = [
-    # DTOs
-    "TranslationDTO",
-    "TranslationSetDTO",
-    "CreateTranslationDTO",
-    "UpdateTranslationDTO",
-    # Enums
-    "SupportedLanguage",
-    "TranslationStatus",
-    # Exceptions
-    "TranslationException",
-    "TranslationNotFoundError",
-    "TranslationAlreadyExistsError",
-    "TranslationPermissionError",
-    "TranslationValidationError",
-    "TranslationLoadError",
-    "InvalidLanguageError",
-    # Service Interface
-    "TranslationServiceInterface",
+    "FeatureDescriptor",
+    "load_features",
+    "set_global_language",
+    "set_user_language",
+    "get_effective_language",
+    "available_languages",
+    "t",
+    "reset_state",
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
