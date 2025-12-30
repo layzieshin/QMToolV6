@@ -21,6 +21,9 @@ class FeatureDescriptor:
 class TranslationEngine:
     """
     Lightweight translation engine that follows the MASTERPROMPT contract.
+
+    Duplicate keys inside a single labels.tsv are allowed; if translations differ,
+    the last occurrence wins and a single I18N_DUPLICATE_KEY log entry is emitted.
     """
 
     def __init__(self, *, default_language: str = "de", logger: Optional[logging.Logger] = None) -> None:
@@ -94,7 +97,7 @@ class TranslationEngine:
 
             try:
                 self._load_single_feature(feature_id, labels_path)
-            except Exception as exc:  # noqa: BLE001
+            except (OSError, ValueError, UnicodeDecodeError) as exc:
                 self._log_once(
                     self._logged_missing_files,
                     feature_id,
@@ -111,7 +114,7 @@ class TranslationEngine:
 
         header = lines[0].split("\t")
         if len(header) < 2 or header[0].strip().lower() != "label":
-            raise ValueError("Invalid TSV header")
+            raise ValueError("Invalid TSV header: first column must be 'label' and at least one language column is required")
 
         languages = [col.strip().lower() for col in header[1:] if col.strip()]
         if not languages:
